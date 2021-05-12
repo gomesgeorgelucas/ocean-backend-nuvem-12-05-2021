@@ -1,11 +1,19 @@
+//Dados MongoDB Atlas
+// "admin"
+// "wJWB1AsHYvK4HNZX"
+
 const express = require('express');
-const { MongoClient, ObjectId } = require('mongodb');
+
+const {MongoClient, ObjectId} = require('mongodb');
 
 (async () => {
-const url = 'mongodb+srv://admin:ECnrGWIZ9YBYUHpE@cluster0.zwmgv.mongodb.net/ocean_db?retryWrites=true&w=majority';
 
+const urlLocal = 'mongodb://localhost:27017';
+
+const url = 'mongodb+srv://admin:wJWB1AsHYvK4HNZX@cluster0.1bdvp.mongodb.net/ocean_db?retryWrites=true&w=majority';
+
+const dbNameLocal = 'db_ocean_mdb_2021';
 const dbName = 'ocean_db';
-
 console.info('Conectando ao banco de dados...');
 
 const client = await MongoClient.connect(url, { useUnifiedTopology: true });
@@ -22,14 +30,20 @@ app.get('/hello', function (req, res) {
   res.send('Hello World');
 });
 
-const mensagensCollection = db.collection('mensagens');
+const mensagens = ['Essa é a primeira mensagem!', 'Essa é a segunda mensagem!'];
+
+const mensagensCollection = db.collection('mensagens')
 
 // CRUD (Create, Read, Update, Delete)
 
 // GET: READ ALL (exibir todos os registros)
-app.get('/mensagens', async (req, res) => {
-  const listaMensagens = await mensagensCollection.find().toArray();
+//app.get('/mensagens', (req, res) => {
+// res.send(mensagens.filter(Boolean));  
+//});
 
+//MongoDB
+app.get('/mensagens', async (req, res) => {
+  const listaMensagens =  await mensagensCollection.find().toArray();
   res.send(listaMensagens);
 });
 
@@ -37,12 +51,11 @@ app.get('/mensagens', async (req, res) => {
 app.get('/mensagens/:id', async (req, res) => {
   const id = req.params.id;
 
-  const mensagem = await mensagensCollection.findOne({ _id: ObjectId(id) });
+  const mensagem = await mensagensCollection.findOne({ _id: ObjectId(id) }).catch(console.error);
+  //const mensagem = mensagens[id];
 
   if (!mensagem) {
     res.send('Mensagem não encontrada.');
-
-    return;
   }
 
   res.send(mensagem);
@@ -52,34 +65,35 @@ app.get('/mensagens/:id', async (req, res) => {
 app.post('/mensagens', async (req, res) => {
   const mensagem = req.body;
 
-  await mensagensCollection.insertOne(mensagem);
+  await mensagensCollection.insertOne(mensagem);  
 
   res.send(mensagem);
 });
 
 // PUT: UPDATE (editar um registro)
-app.put('/mensagens/:id', async (req, res) => {
+app.put('/mensagens/:id', async(req, res) => {
   const id = req.params.id;
 
   const mensagem = req.body;
 
   await mensagensCollection.updateOne(
-    { _id: ObjectId(id) },
-    { $set: mensagem }
+    { _id: ObjectId(id)},
+    {$set: mensagem}
   );
 
-  res.send('Mensagem editada com sucesso.');
+  res.send('Mensagem atualizada com sucesso.');
 });
 
 // DELETE: DELETE (remover um registro)
 app.delete('/mensagens/:id', async (req, res) => {
   const id = req.params.id;
 
-  await mensagensCollection.deleteOne({ _id: ObjectId(id) });
+  await mensagensCollection.deleteOne({ _id: ObjectId(id)});
 
   res.send('Mensagem removida com sucesso.');
 });
 
-app.listen(3000);
 
-})();
+app.listen(process.env.PORT || 3000);
+
+})(); //fim async
